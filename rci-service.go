@@ -38,11 +38,6 @@ func New(log logApi.Logger, name, path string) rciApi.Service {
 	return s
 }
 
-func (s *svc) Commands() []byte {
-	// make JSON array of hooks
-	return nil
-}
-
 //
 func (s *svc) run(log logApi.Logger) {
 
