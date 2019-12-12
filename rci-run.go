@@ -21,6 +21,8 @@ func (s *svc) Run(hook string) ([]byte, error) {
 	switch cmd.Type {
 	case rciApi.CommandTypeShellScript:
 		return s.runShellScript(cmd)
+	case rciApi.CommandTypeBuiltIn:
+		return s.runBuiltIn(cmd)
 	default:
 		return nil, fmt.Errorf("unsupported command type '%s'", cmd.Type)
 	}
@@ -43,4 +45,13 @@ func (s *svc) runShellScript(command *rciApi.Hook) ([]byte, error) {
 	// 	string(bytes.TrimSuffix(output, []byte{10})))
 
 	return output, nil
+}
+
+//
+func (s *svc) runBuiltIn(command *rciApi.Hook) ([]byte, error) {
+	if command.Data.BuiltIn == nil {
+		return nil, fmt.Errorf("built-in hook '%s' is nil", command.Hook)
+	}
+
+	return command.Data.BuiltIn()
 }

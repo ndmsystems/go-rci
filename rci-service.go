@@ -38,12 +38,9 @@ func New(log logApi.Logger, name, path string) rciApi.Service {
 	return s
 }
 
-func (s *svc) Command(hook string) *rciApi.Hook {
-	s.mu.RLock()
-	cmd := s.hooks[hook]
-	s.mu.RUnlock()
-
-	return cmd
+func (s *svc) Commands() []byte {
+	// make JSON array of hooks
+	return nil
 }
 
 //
