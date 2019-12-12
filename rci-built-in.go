@@ -11,15 +11,13 @@ func (s *svc) addBuiltInHooks() {
 	s.addCommandDescribeAPI()
 }
 
+//
 func (s *svc) addCommandPing() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/ping",
 		Name: "RCI ping",
 		Type: rciApi.CommandTypeShellScript,
 		Data: rciApi.HookData{
-			Output: "log",
-			Return: "state",
-			Error:  "fail",
 			Execute: []string{
 				"echo pong",
 			},
@@ -29,6 +27,7 @@ func (s *svc) addCommandPing() {
 	s.hooks[cmd.Hook] = cmd
 }
 
+//
 func (s *svc) addCommandDescribeAPI() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/describe-api",
