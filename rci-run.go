@@ -73,7 +73,7 @@ func (s *svc) formatShellScript(
 		buf.WriteString(part)
 		buf.WriteString("\":{")
 	}
-	buf.WriteString("result: \"")
+	buf.WriteString("\"result\":\"")
 	buf.Write(data)
 	buf.WriteString("\"")
 	for i := 0; i < len(parts); i++ {
