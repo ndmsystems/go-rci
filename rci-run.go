@@ -69,8 +69,9 @@ func (s *svc) formatShellScript(
 
 	buf.WriteString("{")
 	for _, part := range parts {
+		buf.WriteString("\"")
 		buf.WriteString(part)
-		buf.WriteString(":{")
+		buf.WriteString("\":{")
 	}
 	buf.WriteString("result: \"")
 	buf.Write(data)
