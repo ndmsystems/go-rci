@@ -11,7 +11,6 @@ func (s *svc) addBuiltInHooks() {
 	s.addCommandDescribeAPI()
 }
 
-//
 func (s *svc) addCommandPing() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/ping",
@@ -26,6 +25,21 @@ func (s *svc) addCommandPing() {
 
 	s.hooks[cmd.Hook] = cmd
 }
+
+// // FormatReply ...
+// func (HookPing) Reply(data []byte) ([]byte, error) {
+
+// 	// Ping result
+// 	type Ping struct {
+// 		Result string
+// 	}
+
+// 	ping := &Ping {
+// 		Result : string(data),
+// 	}
+
+// 	return json.Marshal(ping,)
+// }
 
 //
 func (s *svc) addCommandDescribeAPI() {

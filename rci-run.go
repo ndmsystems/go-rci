@@ -1,11 +1,18 @@
 package rci
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	rciApi "github.com/tdx/go-rci/api"
 )
+
+// Replyer ...
+type Replyer interface {
+	Format([]byte) ([]byte, error)
+}
 
 // Run ...
 func (s *svc) Run(hook string) ([]byte, error) {
@@ -40,11 +47,7 @@ func (s *svc) runShellScript(command *rciApi.Hook) ([]byte, error) {
 		return nil, err
 	}
 
-	// s.log.Info().Println(
-	// 	s.tag, "hook:", command.Hook, "result:",
-	// 	string(bytes.TrimSuffix(output, []byte{10})))
-
-	return output, nil
+	return s.formatShellScript(command, output)
 }
 
 //
@@ -54,4 +57,28 @@ func (s *svc) runBuiltIn(command *rciApi.Hook) ([]byte, error) {
 	}
 
 	return command.Data.BuiltIn()
+}
+
+//
+func (s *svc) formatShellScript(
+	command *rciApi.Hook, data []byte) ([]byte, error) {
+
+	parts := strings.Split(strings.TrimPrefix(command.Hook, "/rci/"), "/")
+
+	var buf bytes.Buffer
+
+	buf.WriteString("{")
+	for _, part := range parts {
+		buf.WriteString(part)
+		buf.WriteString(":{")
+	}
+	buf.WriteString("result: \"")
+	buf.Write(data)
+	buf.WriteString("\"")
+	for i := 0; i < len(parts); i++ {
+		buf.WriteString("}")
+	}
+	buf.WriteString("}")
+
+	return buf.Bytes(), nil
 }
