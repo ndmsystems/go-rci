@@ -47,7 +47,7 @@ func (s *svc) runShellScript(command *rciApi.Hook) ([]byte, error) {
 		return nil, err
 	}
 
-	return s.formatShellScript(command, output)
+	return s.formatShellScript(command, bytes.TrimSpace(output))
 }
 
 //
