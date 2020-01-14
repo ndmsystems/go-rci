@@ -56,7 +56,7 @@ func (s *svc) runBuiltIn(command *rciApi.Hook) ([]byte, error) {
 		return nil, fmt.Errorf("built-in hook '%s' is nil", command.Hook)
 	}
 
-	return command.Data.BuiltIn()
+	return command.Data.BuiltIn(command)
 }
 
 //
