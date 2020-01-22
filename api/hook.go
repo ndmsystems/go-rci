@@ -18,7 +18,7 @@ type HookData struct {
 	Return  string
 	Error   string
 	Execute []string
-	BuiltIn func(hook *Hook) ([]byte, error) `json:"-"`
+	BuiltIn func(token []byte, hook *Hook) ([]byte, error) `json:"-"`
 }
 
 // Hook ...
