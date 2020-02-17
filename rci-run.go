@@ -15,7 +15,8 @@ type Replyer interface {
 }
 
 // Run ...
-func (s *svc) Run(token []byte, hook string) ([]byte, error) {
+func (s *svc) Run(
+	token []byte, hook string, args map[string]string) ([]byte, error) {
 
 	s.mu.RLock()
 	cmd, ok := s.hooks[hook]
@@ -27,9 +28,9 @@ func (s *svc) Run(token []byte, hook string) ([]byte, error) {
 
 	switch cmd.Type {
 	case rciApi.CommandTypeShellScript:
-		return s.runShellScript(token, cmd)
+		return s.runShellScript(token, cmd, args)
 	case rciApi.CommandTypeBuiltIn:
-		return s.runBuiltIn(token, cmd)
+		return s.runBuiltIn(token, cmd, args)
 	default:
 		return nil, fmt.Errorf("unsupported command type '%s'", cmd.Type)
 	}
@@ -37,28 +38,30 @@ func (s *svc) Run(token []byte, hook string) ([]byte, error) {
 
 //
 func (s *svc) runShellScript(
-	token []byte, command *rciApi.Hook) ([]byte, error) {
+	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
 
-	if len(command.Data.Execute) < 1 {
-		return nil, fmt.Errorf("empty 'execute' of hook '%s'", command.Hook)
+	if len(hook.Data.Execute) < 1 {
+		return nil, fmt.Errorf("empty 'execute' of hook '%s'", hook.Hook)
 	}
 
-	cmd := exec.Command("sh", "-c", command.Data.Execute[0]+" 2>&1")
+	cmd := exec.Command("sh", "-c", hook.Data.Execute[0]+" 2>&1")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, err
 	}
 
-	return s.formatShellScript(command, bytes.TrimSpace(output))
+	return s.formatShellScript(hook, bytes.TrimSpace(output))
 }
 
 //
-func (s *svc) runBuiltIn(token []byte, command *rciApi.Hook) ([]byte, error) {
-	if command.Data.BuiltIn == nil {
-		return nil, fmt.Errorf("built-in hook '%s' is nil", command.Hook)
+func (s *svc) runBuiltIn(
+	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
+
+	if hook.Data.BuiltIn == nil {
+		return nil, fmt.Errorf("built-in hook '%s' is nil", hook.Hook)
 	}
 
-	return command.Data.BuiltIn(token, command)
+	return hook.Data.BuiltIn(token, hook, args)
 }
 
 //

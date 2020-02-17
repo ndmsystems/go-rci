@@ -43,7 +43,9 @@ func (s *svc) addCommandDescribeAPI() {
 }
 
 //
-func (s *svc) describeAPI(token []byte, hook *rciApi.Hook) ([]byte, error) {
+func (s *svc) describeAPI(
+	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
+
 	s.mu.RLock()
 	json, err := json.Marshal(s.hooks)
 	s.mu.RUnlock()
