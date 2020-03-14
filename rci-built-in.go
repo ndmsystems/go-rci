@@ -2,6 +2,7 @@ package rci
 
 import (
 	"encoding/json"
+	"os"
 
 	rciApi "github.com/tdx/go-rci/api"
 )
@@ -10,6 +11,7 @@ import (
 func (s *svc) addBuiltInHooks() {
 	s.addCommandPing()
 	s.addCommandDescribeAPI()
+	s.addCommandHostname()
 }
 
 //
@@ -43,6 +45,20 @@ func (s *svc) addCommandDescribeAPI() {
 }
 
 //
+func (s *svc) addCommandHostname() {
+	cmd := &rciApi.Hook{
+		Hook: "/rci/hostname",
+		Name: "Hostname",
+		Type: rciApi.CommandTypeBuiltIn,
+		Data: rciApi.HookData{
+			BuiltIn: s.hostname,
+		},
+	}
+
+	s.hooks[cmd.Hook] = cmd
+}
+
+//
 func (s *svc) describeAPI(
 	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
 
@@ -51,4 +67,15 @@ func (s *svc) describeAPI(
 	s.mu.RUnlock()
 
 	return json, err
+}
+
+func (s *svc) hostname(
+	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte("{\"renew\":\"" + hostname + "\"}"), nil
 }
