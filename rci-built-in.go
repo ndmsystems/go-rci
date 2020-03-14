@@ -77,5 +77,5 @@ func (s *svc) hostname(
 		return nil, err
 	}
 
-	return []byte("{\"renew\":\"" + hostname + "\"}"), nil
+	return []byte("{\"hostname\":\"" + hostname + "\"}"), nil
 }
