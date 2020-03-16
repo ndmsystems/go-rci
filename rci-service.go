@@ -22,7 +22,11 @@ type svc struct {
 }
 
 // New ...
-func New(log logApi.Logger, name, path string) rciApi.Service {
+func New(
+	log logApi.Logger,
+	name, path string,
+	filesCommands bool) rciApi.Service {
+
 	s := &svc{
 		log:       log,
 		tag:       "[RCI " + name + "]:",
@@ -33,7 +37,9 @@ func New(log logApi.Logger, name, path string) rciApi.Service {
 
 	s.addBuiltInHooks()
 
-	go s.run(s.log)
+	if filesCommands {
+		go s.run(s.log)
+	}
 
 	return s
 }
