@@ -49,7 +49,7 @@ func (s *svc) run(log logApi.Logger) {
 
 	log.Info().Println(s.tag, "find in path:", s.path)
 
-	if err := os.MkdirAll(s.path, os.ModeDir); err != nil {
+	if err := os.MkdirAll(s.path, 0700); err != nil {
 		log.Error().Println(s.tag, "create dir", s.path, "failed:", err)
 	}
 
