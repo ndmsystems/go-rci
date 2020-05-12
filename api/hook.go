@@ -27,7 +27,7 @@ type HookData struct {
 // Hook ...
 type Hook struct {
 	Hook         string `json:"-"`    // only URI
-	HookWithArgs string `json:"hook"` // with query string
+	HookWithArgs string `json:"Hook"` // with query string
 	Name         string
 	Type         CommandType
 	Data         HookData
