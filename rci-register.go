@@ -24,9 +24,6 @@ func (s *svc) Register(hook string, hookCommand *rciApi.Hook) error {
 		return fmt.Errorf("hook '%s' already registered", path)
 	}
 
-	hookCommand.HookWithArgs = hook
-	hookCommand.Hook = path
-
 	s.mu.Lock()
 	s.hooks[path] = hookCommand
 	s.mu.Unlock()
