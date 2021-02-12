@@ -13,127 +13,136 @@ import (
 )
 
 type svc struct {
-	tag       string
-	log       logApi.Logger
-	path      string
-	file2hook map[string]string
-	mu        sync.RWMutex
-	hooks     map[string]*rciApi.Hook
+	tag        string
+	log        logApi.Logger
+	pathGlobal string
+	pathLocal  string
+	file2hook  map[string]string
+	mu         sync.RWMutex
+	hooks      map[string]*rciApi.Hook
 }
 
 // New ...
 func New(
 	log logApi.Logger,
-	name, path string,
+	name, pathGlobal, pathLocal string,
 	filesCommands bool) rciApi.Service {
 
 	s := &svc{
-		log:       log,
-		tag:       "[RCI " + name + "]:",
-		path:      filepath.Join(path, name, "rci"),
-		file2hook: make(map[string]string),
-		hooks:     make(map[string]*rciApi.Hook),
+		log:        log,
+		tag:        "[RCI " + name + "]:",
+		pathGlobal: pathGlobal,
+		pathLocal:  filepath.Join(pathLocal, name, "rci"),
+		file2hook:  make(map[string]string),
+		hooks:      make(map[string]*rciApi.Hook),
 	}
 
 	s.addBuiltInHooks()
 
 	if filesCommands {
-		go s.run(s.log)
+		go s.run()
 	}
 
 	return s
 }
 
 //
-func (s *svc) run(log logApi.Logger) {
+func (s *svc) run() {
 
-	log.Info().Println(s.tag, "find in path:", s.path)
+	s.log.Info().Println(s.tag, "global path::", s.pathGlobal)
+	s.log.Info().Println(s.tag, "local path::", s.pathLocal)
 
-	if err := os.MkdirAll(s.path, 0700); err != nil {
-		log.Error().Println(s.tag, "create dir", s.path, "failed:", err)
+	if err := os.MkdirAll(s.pathLocal, 0700); err != nil {
+		s.log.Error().Println(s.tag, "create dir", s.pathLocal, "failed:", err)
 	}
 
 	for {
-		updated := 0
-
-		// update hooks under s.path
-		err := filepath.Walk(
-			s.path,
-			func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-
-				if info.IsDir() {
-					return nil
-				}
-
-				var (
-					update bool
-					oldCmd *rciApi.Hook
-				)
-
-				if Hook, ok := s.file2hook[path]; ok {
-					// lock read free for updating routine
-					oldCmd = s.hooks[Hook]
-				}
-
-				if oldCmd != nil {
-					if oldCmd.Size != info.Size() ||
-						oldCmd.ModTime != info.ModTime() {
-
-						update = true
-					}
-				} else {
-					update = true
-				}
-
-				log.Info().Println(s.tag,
-					path, info.Size(), info.ModTime(), update)
-
-				if !update {
-					return nil
-				}
-
-				data, err := ioutil.ReadFile(path)
-				if err != nil {
-					return err
-				}
-
-				cmd := new(rciApi.Hook)
-				if err = json.Unmarshal(data, &cmd); err != nil {
-					return err
-				}
-
-				cmd.Size = info.Size()
-				cmd.ModTime = info.ModTime()
-				cmd.FileName = path
-
-				s.file2hook[path] = cmd.Hook
-
-				s.mu.Lock()
-				s.hooks[cmd.Hook] = cmd
-				s.mu.Unlock()
-
-				updated++
-
-				return nil
-			})
-
-		if err != nil {
-			log.Error().Println(s.tag, "walk", s.path, "failed:", err)
-		}
-
-		if updated > 0 {
-			log.Info().Println(s.tag, "updated hooks:", updated)
-		}
-
-		if deleted := s.chkDeleted(); deleted > 0 {
-			log.Info().Println(s.tag, "deleted hooks:", deleted)
-			s.delete()
-		}
+		s.walkPath(s.pathGlobal)
+		s.walkPath(s.pathLocal)
 
 		time.Sleep(time.Minute)
+	}
+}
+
+func (s *svc) walkPath(path string) {
+
+	updated := 0
+
+	// update hooks under s.path
+	err := filepath.Walk(
+		path,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if info.IsDir() {
+				return nil
+			}
+
+			var (
+				update bool
+				oldCmd *rciApi.Hook
+			)
+
+			if Hook, ok := s.file2hook[path]; ok {
+				// lock read free for updating routine
+				oldCmd = s.hooks[Hook]
+			}
+
+			if oldCmd != nil {
+				if oldCmd.Size != info.Size() ||
+					oldCmd.ModTime != info.ModTime() {
+
+					update = true
+				}
+			} else {
+				update = true
+			}
+
+			s.log.Info().Println(s.tag,
+				path, info.Size(), info.ModTime(), update)
+
+			if !update {
+				return nil
+			}
+
+			data, err := ioutil.ReadFile(path)
+			if err != nil {
+				return err
+			}
+
+			cmd := new(rciApi.Hook)
+			if err = json.Unmarshal(data, &cmd); err != nil {
+				return err
+			}
+
+			cmd.Size = info.Size()
+			cmd.ModTime = info.ModTime()
+			cmd.FileName = path
+
+			s.file2hook[path] = cmd.Hook
+
+			s.mu.Lock()
+			s.hooks[cmd.Hook] = cmd
+			s.mu.Unlock()
+
+			updated++
+
+			return nil
+		})
+
+	if err != nil {
+		s.log.Error().Println(s.tag, "walk", path, "failed:", err)
+	}
+
+	if updated > 0 {
+		s.log.Info().Println(s.tag, "updated hooks in", path, updated)
+	}
+
+	if deleted := s.chkDeleted(); deleted > 0 {
+		s.log.Info().Println(s.tag, "deleted hooks in", path, deleted)
+		s.delete()
 	}
 }
 
