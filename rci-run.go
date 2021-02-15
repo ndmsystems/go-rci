@@ -79,27 +79,27 @@ func (s *svc) formatShellScript(
 		buf.WriteString(part)
 		buf.WriteString("\":{")
 	}
-	hasNewLines := bytes.Contains(data, []byte{10})
-	if hasNewLines {
-		buf.WriteString("\"result\":[")
-		lines := bytes.Split(data, []byte{10})
-		for i, line := range lines {
-			jsonValue, err := json.Marshal(string(line))
-			if err != nil {
-				buf.WriteString("error json.Marshal():" + err.Error())
-				break
-			}
-			buf.Write(jsonValue)
-			if i < len(lines)-1 {
-				buf.WriteString(",")
-			}
+	// hasNewLines := bytes.Contains(data, []byte{10})
+	// if hasNewLines {
+	buf.WriteString("\"result\":[")
+	lines := bytes.Split(data, []byte{10})
+	for i, line := range lines {
+		jsonValue, err := json.Marshal(string(line))
+		if err != nil {
+			buf.WriteString("error json.Marshal():" + err.Error())
+			break
 		}
-		buf.WriteString("]")
-	} else {
-		buf.WriteString("\"result\":\"")
-		buf.Write(data)
-		buf.WriteString("\"")
+		buf.Write(jsonValue)
+		if i < len(lines)-1 {
+			buf.WriteString(",")
+		}
 	}
+	buf.WriteString("]")
+	// } else {
+	// 	buf.WriteString("\"result\":\"")
+	// 	buf.Write(data)
+	// 	buf.WriteString("\"")
+	// }
 
 	for i := 0; i < len(parts); i++ {
 		buf.WriteString("}")
