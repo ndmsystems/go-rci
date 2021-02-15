@@ -2,6 +2,7 @@ package rci
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -78,9 +79,24 @@ func (s *svc) formatShellScript(
 		buf.WriteString(part)
 		buf.WriteString("\":{")
 	}
-	buf.WriteString("\"result\":\"")
-	buf.Write(data)
-	buf.WriteString("\"")
+	hasNewLines := bytes.Contains(data, []byte{10})
+	if hasNewLines {
+		buf.WriteString("\"result\":[")
+		for _, line := range bytes.Split(data, []byte{10}) {
+			jsonValue, err := json.Marshal(line)
+			if err != nil {
+				buf.WriteString("error json.Marshal():" + err.Error())
+				break
+			}
+			buf.Write(jsonValue)
+		}
+		buf.WriteString("]")
+	} else {
+		buf.WriteString("\"result\":\"")
+		buf.Write(data)
+		buf.WriteString("\"")
+	}
+
 	for i := 0; i < len(parts); i++ {
 		buf.WriteString("}")
 	}
