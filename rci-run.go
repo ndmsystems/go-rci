@@ -84,7 +84,7 @@ func (s *svc) formatShellScript(
 		buf.WriteString("\"result\":[")
 		lines := bytes.Split(data, []byte{10})
 		for i, line := range lines {
-			jsonValue, err := json.Marshal(line)
+			jsonValue, err := json.Marshal(string(line))
 			if err != nil {
 				buf.WriteString("error json.Marshal():" + err.Error())
 				break
