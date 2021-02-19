@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 
@@ -51,9 +50,10 @@ func (s *svc) runShellScript(
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		ret = "error"
-		log.Println("err:", err)
-		log.Println("out:", string(output))
-		output = bytes.TrimSpace([]byte(err.Error()))
+		errOutput := bytes.TrimSpace([]byte(err.Error()))
+		errOutput = append(errOutput, byte(10))
+		errOutput = append(errOutput, output...)
+		output = errOutput
 	}
 
 	return s.formatShellScript(hook, ret, bytes.TrimSpace(output))
