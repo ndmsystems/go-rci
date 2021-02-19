@@ -46,12 +46,14 @@ func (s *svc) runShellScript(
 	}
 
 	cmd := exec.Command("sh", "-c", hook.Data.Execute[0]+" 2>&1")
+	ret := "result"
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		ret = "error"
+		output = bytes.TrimSpace([]byte(err.Error()))
 	}
 
-	return s.formatShellScript(hook, bytes.TrimSpace(output))
+	return s.formatShellScript(hook, ret, bytes.TrimSpace(output))
 }
 
 //
@@ -67,7 +69,9 @@ func (s *svc) runBuiltIn(
 
 //
 func (s *svc) formatShellScript(
-	command *rciApi.Hook, data []byte) ([]byte, error) {
+	command *rciApi.Hook,
+	ret string, // "result" | "error"
+	data []byte) ([]byte, error) {
 
 	parts := strings.Split(strings.TrimPrefix(command.Hook, "/rci/"), "/")
 
