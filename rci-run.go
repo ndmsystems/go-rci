@@ -46,14 +46,13 @@ func (s *svc) runShellScript(
 		return nil, fmt.Errorf("empty 'execute' of hook '%s'", hook.Hook)
 	}
 
-	// cmd := exec.Command("sh", "-c", hook.Data.Execute[0]+" 2>&1")
-	cmd := exec.Command("sh", "-c", hook.Data.Execute[0])
+	cmd := exec.Command("sh", "-c", hook.Data.Execute[0]+" 2>&1")
 	ret := "result"
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		ret = "error"
 		log.Println("err:", err)
-		log.Println("out:", output)
+		log.Println("out:", string(output))
 		output = bytes.TrimSpace([]byte(err.Error()))
 	}
 
