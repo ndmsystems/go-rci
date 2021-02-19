@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os/exec"
 	"strings"
 
@@ -45,11 +46,14 @@ func (s *svc) runShellScript(
 		return nil, fmt.Errorf("empty 'execute' of hook '%s'", hook.Hook)
 	}
 
-	cmd := exec.Command("sh", "-c", hook.Data.Execute[0]+" 2>&1")
+	// cmd := exec.Command("sh", "-c", hook.Data.Execute[0]+" 2>&1")
+	cmd := exec.Command("sh", "-c", hook.Data.Execute[0])
 	ret := "result"
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		ret = "error"
+		log.Println("err:", err)
+		log.Println("out:", output)
 		output = bytes.TrimSpace([]byte(err.Error()))
 	}
 
@@ -85,7 +89,7 @@ func (s *svc) formatShellScript(
 	}
 	// hasNewLines := bytes.Contains(data, []byte{10})
 	// if hasNewLines {
-	buf.WriteString("\"result\":[")
+	buf.WriteString("\"" + ret + "\":[")
 	lines := bytes.Split(data, []byte{10})
 	for i, line := range lines {
 		jsonValue, err := json.Marshal(string(line))
