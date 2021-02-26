@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -52,17 +53,26 @@ func (s *svc) runShellScriptAsync(
 	logFile := filepath.Join(s.pathLocal, "async", uid+".log")
 	stateFile := filepath.Join(s.pathLocal, "async", uid+".json")
 
-	cmd := exec.Command(
-		"sh", "-c", "'"+hook.Data.Execute[0]+" 2>&1 >"+logFile+"'")
+	out, err := os.Create(logFile)
+	if err != nil {
+		return failed(uid, "create log file", err)
+	}
+
+	cmd := exec.Command("sh", "-c", hook.Data.Execute[0])
+	cmd.Stdout = out
+	cmd.Stderr = out
 	if err := cmd.Start(); err != nil {
+		out.Close()
 		return failed(uid, "script start", err)
 	}
 
 	pid := cmd.Process.Pid
-	err := scriptStarted(stateFile, pid)
+	err = scriptStarted(stateFile, pid)
 
 	go func() {
-		scriptFinished(stateFile, pid, cmd.Wait())
+		err := cmd.Wait()
+		scriptFinished(stateFile, pid, err)
+		out.Close()
 	}()
 
 	if err != nil {
