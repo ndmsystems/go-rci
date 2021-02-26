@@ -2,6 +2,7 @@ package rci
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os/exec"
@@ -30,13 +31,15 @@ type startOk struct {
 }
 
 type hookFailed struct {
-	startOk
+	UID   string `json:"uid"`
 	Where string `json:"where"`
 	Err   error  `json:"error"`
 }
 
 func (s *svc) runShellScriptAsync(
 	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
+
+	s.log.Info().Println(s.tag, "hook:", hook.Hook, "args:", args)
 
 	// check result argument
 	uid := args["result"]
@@ -52,7 +55,7 @@ func (s *svc) runShellScriptAsync(
 	logFile := filepath.Join(s.pathLocal, "async", uid+".log")
 	stateFile := filepath.Join(s.pathLocal, "async", uid+".json")
 
-	cmd := exec.Command("sh", "-c", hook.Data.Execute[0]+" 2>&1 >"+logFile)
+	cmd := exec.Command("sh", "-c", hook.Data.Execute[0], ">", logFile)
 	err := cmd.Start()
 	if err != nil {
 		return failed(uid, "script start", err)
@@ -97,6 +100,7 @@ func (s *svc) result(uid string) ([]byte, error) {
 
 func failed(uid, where string, err error) ([]byte, error) {
 	return json.Marshal(&hookFailed{
+		UID:   uid,
 		Where: where,
 		Err:   err,
 	})
@@ -122,15 +126,15 @@ func scriptFinished(fileName string, pid int, err error) {
 func writeCommandState(
 	fileName string, pid int, finished bool, err error) error {
 
-	var err2 error
+	var errStr error
 	if err != nil {
-		err2 = err
+		errStr = errors.New(err.Error())
 	}
 
 	s := cmdState{
 		Pid:      pid,
 		Finished: finished,
-		Err:      err2,
+		Err:      errStr,
 	}
 
 	data, err := json.Marshal(&s)
