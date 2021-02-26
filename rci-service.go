@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -56,12 +57,12 @@ func (s *svc) run() {
 	s.log.Info().Println(s.tag, "global path::", s.pathGlobal)
 	s.log.Info().Println(s.tag, "local path::", s.pathLocal)
 
-	if err := os.MkdirAll(s.pathLocal, 0700); err != nil {
+	if err := os.MkdirAll(s.pathLocal, 0770); err != nil {
 		s.log.Error().Println(s.tag, "create dir", s.pathLocal, "failed:", err)
 	}
 
 	pathAsync := filepath.Join(s.pathLocal, "async")
-	if err := os.MkdirAll(pathAsync, 0700); err != nil {
+	if err := os.MkdirAll(pathAsync, 0770); err != nil {
 		s.log.Error().Println(s.tag, "create dir", pathAsync, "failed:", err)
 	}
 
@@ -88,6 +89,11 @@ func (s *svc) walkPath(path string) {
 			}
 
 			if info.IsDir() {
+				return nil
+			}
+
+			// skip async commands dir
+			if strings.Contains(path, "async") {
 				return nil
 			}
 

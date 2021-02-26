@@ -122,10 +122,15 @@ func scriptFinished(fileName string, pid int, err error) {
 func writeCommandState(
 	fileName string, pid int, finished bool, err error) error {
 
+	var err2 error
+	if err != nil {
+		err2 = err
+	}
+
 	s := cmdState{
 		Pid:      pid,
 		Finished: finished,
-		Err:      err,
+		Err:      err2,
 	}
 
 	data, err := json.Marshal(&s)
