@@ -2,6 +2,7 @@ package rci
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -127,12 +128,12 @@ func (s *svc) walkPath(path string) {
 
 			data, err := ioutil.ReadFile(path)
 			if err != nil {
-				return err
+				return fmt.Errorf("read file failed: %w", err)
 			}
 
 			cmd := new(rciApi.Hook)
 			if err = json.Unmarshal(data, &cmd); err != nil {
-				return err
+				return fmt.Errorf("json.Unmarshal failed: %w", err)
 			}
 
 			cmd.Size = info.Size()

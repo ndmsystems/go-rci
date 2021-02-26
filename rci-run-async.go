@@ -59,8 +59,8 @@ func (s *svc) runShellScriptAsync(
 
 	script := hook.Data.Execute[0] + " >" + logFile
 	cmd := exec.Command("sh", "-c", script)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	// cmd.Stdout = os.Stdout
+	// cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
 		return failed(uid, "script start", err)
 	}
