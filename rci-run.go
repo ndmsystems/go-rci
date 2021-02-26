@@ -29,7 +29,7 @@ func (s *svc) Run(
 
 	switch cmd.Type {
 	case rciApi.CommandTypeShellScript:
-		if webhook := args["rci-webhook"]; webhook == "1" {
+		if cmd.Sync {
 			return s.runShellScript(token, cmd, args)
 		}
 		return s.runShellScriptAsync(token, cmd, args)

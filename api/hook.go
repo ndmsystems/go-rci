@@ -26,12 +26,13 @@ type HookData struct {
 
 // Hook ...
 type Hook struct {
-	Hook         string
-	Name         string
-	Type         CommandType
-	Data         HookData
-	Size         int64     `json:"-"`
-	ModTime      time.Time `json:"-"`
-	FileName     string    `json:"-"`
-	Deleted      bool      `json:"-"`
+	Hook     string
+	Name     string
+	Type     CommandType
+	Sync     bool
+	Data     HookData
+	Size     int64     `json:"-"`
+	ModTime  time.Time `json:"-"`
+	FileName string    `json:"-"`
+	Deleted  bool      `json:"-"`
 }
