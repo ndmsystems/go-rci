@@ -38,8 +38,6 @@ type hookFailed struct {
 func (s *svc) runShellScriptAsync(
 	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
 
-	s.log.Info().Println(s.tag, "hook:", hook.Hook, "args:", args)
-
 	// check result argument
 	uid := args["result"]
 	if uid != "" {
@@ -54,21 +52,21 @@ func (s *svc) runShellScriptAsync(
 	logFile := filepath.Join(s.pathLocal, "async", uid+".log")
 	stateFile := filepath.Join(s.pathLocal, "async", uid+".json")
 
-	cmd := exec.Command("sh", "-c", hook.Data.Execute[0]+" 2>&1 >"+logFile)
-	err := cmd.Start()
-	if err != nil {
+	cmd := exec.Command(
+		"sh", "-c", "'"+hook.Data.Execute[0]+" 2>&1 >"+logFile+"'")
+	if err := cmd.Start(); err != nil {
 		return failed(uid, "script start", err)
 	}
 
 	pid := cmd.Process.Pid
-	errWS := scriptStarted(stateFile, pid)
+	err := scriptStarted(stateFile, pid)
 
 	go func() {
 		scriptFinished(stateFile, pid, cmd.Wait())
 	}()
 
-	if errWS != nil {
-		return failed(uid, "write state file", errWS)
+	if err != nil {
+		return failed(uid, "write state file", err)
 	}
 
 	return startSuccess(uid)
