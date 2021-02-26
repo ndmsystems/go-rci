@@ -60,6 +60,11 @@ func (s *svc) run() {
 		s.log.Error().Println(s.tag, "create dir", s.pathLocal, "failed:", err)
 	}
 
+	pathAsync := filepath.Join(s.pathLocal, "async")
+	if err := os.MkdirAll(pathAsync, 0700); err != nil {
+		s.log.Error().Println(s.tag, "create dir", pathAsync, "failed:", err)
+	}
+
 	go removeOldAsync(s.log, s.tag, s.pathLocal)
 
 	for {
