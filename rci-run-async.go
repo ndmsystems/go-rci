@@ -101,7 +101,7 @@ func failed(uid, where string, err error) ([]byte, error) {
 	return json.Marshal(&hookFailed{
 		UID:   uid,
 		Where: where,
-		Err:   err.Error(),
+		Err:   merror(err),
 	})
 }
 
@@ -128,7 +128,7 @@ func writeCommandState(
 	s := cmdState{
 		Pid:      pid,
 		Finished: finished,
-		Err:      err.Error(),
+		Err:      merror(err),
 	}
 
 	data, err := json.Marshal(&s)
@@ -152,4 +152,11 @@ func readCommandState(fileName string) (*cmdState, error) {
 	}
 
 	return &s, nil
+}
+
+func merror(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
 }
