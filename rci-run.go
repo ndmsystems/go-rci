@@ -29,7 +29,7 @@ func (s *svc) Run(
 
 	switch cmd.Type {
 	case rciApi.CommandTypeShellScript:
-		return s.runShellScript(token, cmd, args)
+		return s.runShellScriptAsync(token, cmd, args)
 	case rciApi.CommandTypeBuiltIn:
 		return s.runBuiltIn(token, cmd, args)
 	default:
@@ -56,7 +56,7 @@ func (s *svc) runShellScript(
 		output = errOutput
 	}
 
-	return s.formatShellScript(hook, ret, bytes.TrimSpace(output))
+	return formatShellScript(hook, ret, bytes.TrimSpace(output))
 }
 
 //
@@ -71,7 +71,7 @@ func (s *svc) runBuiltIn(
 }
 
 //
-func (s *svc) formatShellScript(
+func formatShellScript(
 	command *rciApi.Hook,
 	ret string, // "result" | "error"
 	data []byte) ([]byte, error) {
@@ -102,11 +102,6 @@ func (s *svc) formatShellScript(
 		}
 	}
 	buf.WriteString("]")
-	// } else {
-	// 	buf.WriteString("\"result\":\"")
-	// 	buf.Write(data)
-	// 	buf.WriteString("\"")
-	// }
 
 	for i := 0; i < len(parts); i++ {
 		buf.WriteString("}")

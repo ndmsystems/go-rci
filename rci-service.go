@@ -22,6 +22,10 @@ type svc struct {
 	hooks      map[string]*rciApi.Hook
 }
 
+var (
+	tenHours = time.Duration(10 * time.Hour)
+)
+
 // New ...
 func New(
 	log logApi.Logger,
@@ -55,6 +59,8 @@ func (s *svc) run() {
 	if err := os.MkdirAll(s.pathLocal, 0700); err != nil {
 		s.log.Error().Println(s.tag, "create dir", s.pathLocal, "failed:", err)
 	}
+
+	go removeOldAsync(s.log, s.tag, s.pathLocal)
 
 	for {
 		s.walkPath(s.pathGlobal)
@@ -183,4 +189,38 @@ func fileExists(filename string) bool {
 	}
 
 	return !info.IsDir()
+}
+
+//
+func removeOldAsync(log logApi.Logger, tag, pathLocal string) {
+	dir := filepath.Join(pathLocal, "async")
+
+	for {
+		err := filepath.Walk(
+			dir,
+			func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				if info.IsDir() {
+					return nil
+				}
+
+				if time.Now().Sub(info.ModTime()) > tenHours {
+					if err := os.Remove(path); err != nil {
+						log.Error().Printf(
+							"%s remove file %s failed: %v\n", tag, path, err)
+					}
+				}
+
+				return nil
+			})
+
+		if err != nil {
+			log.Error().Println(tag, "remove old async", dir, "failed:", err)
+		}
+
+		time.Sleep(10 * time.Minute)
+	}
 }
