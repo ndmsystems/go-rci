@@ -2,12 +2,15 @@ package rci
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 
 	rciApi "github.com/tdx/go-rci/api"
 
@@ -54,27 +57,20 @@ func (s *svc) runShellScriptAsync(
 	logFile := filepath.Join(s.pathLocal, "async", uid+".log")
 	stateFile := filepath.Join(s.pathLocal, "async", uid+".json")
 
-	out, err := os.Create(logFile)
-	if err != nil {
-		return failed(uid, "create log file", err)
-	}
-
-	script := hook.Data.Execute[0]
+	script := hook.Data.Execute[0] + " >" + logFile
 	cmd := exec.Command("sh", "-c", script)
-	cmd.Stdout = out
-	cmd.Stderr = out
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
-		out.Close()
 		return failed(uid, "script start", err)
 	}
 
 	pid := cmd.Process.Pid
-	err = scriptStarted(script, stateFile, pid)
+	err := scriptStarted(script, stateFile, pid)
 
 	go func() {
 		err := cmd.Wait()
 		scriptFinished(script, stateFile, pid, err)
-		out.Close()
 	}()
 
 	if err != nil {
@@ -169,4 +165,38 @@ func merror(err error) string {
 		return ""
 	}
 	return err.Error()
+}
+
+//
+func chkAsync(path string, info os.FileInfo) error {
+
+	if strings.HasSuffix(path, ".json") {
+		state, err := readCommandState(path)
+		if err != nil {
+			return fmt.Errorf("readCommandState failed: %w", err)
+		}
+		if !state.Finished {
+			// check process is running and update finished if process stopped
+			process, err := os.FindProcess(state.Pid)
+			if err != nil {
+				return fmt.Errorf("find process %d failed: %w", state.Pid, err)
+			}
+			if err = process.Signal(syscall.Signal(0)); err != nil {
+				// finished
+				var err2 error
+				if state.Err != "" {
+					err2 = errors.New(state.Err)
+				}
+				scriptFinished(state.Command, path, state.Pid, err2)
+			}
+		}
+	}
+
+	if time.Now().Sub(info.ModTime()) > tenHours {
+		if err := os.Remove(path); err != nil {
+			return fmt.Errorf("remove file failed: %w", err)
+		}
+	}
+
+	return nil
 }

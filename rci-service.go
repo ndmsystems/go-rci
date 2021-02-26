@@ -66,8 +66,6 @@ func (s *svc) run() {
 		s.log.Error().Println(s.tag, "create dir", pathAsync, "failed:", err)
 	}
 
-	go removeOldAsync(s.log, s.tag, s.pathLocal)
-
 	for {
 		s.walkPath(s.pathGlobal)
 		s.walkPath(s.pathLocal)
@@ -94,6 +92,9 @@ func (s *svc) walkPath(path string) {
 
 			// skip async commands dir
 			if strings.Contains(path, "async") {
+				if err = chkAsync(path, info); err != nil {
+					s.log.Error().Println(s.tag, path, err)
+				}
 				return nil
 			}
 
@@ -200,38 +201,4 @@ func fileExists(filename string) bool {
 	}
 
 	return !info.IsDir()
-}
-
-//
-func removeOldAsync(log logApi.Logger, tag, pathLocal string) {
-	dir := filepath.Join(pathLocal, "async")
-
-	for {
-		err := filepath.Walk(
-			dir,
-			func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-
-				if info.IsDir() {
-					return nil
-				}
-
-				if time.Now().Sub(info.ModTime()) > tenHours {
-					if err := os.Remove(path); err != nil {
-						log.Error().Printf(
-							"%s remove file %s failed: %v\n", tag, path, err)
-					}
-				}
-
-				return nil
-			})
-
-		if err != nil {
-			log.Error().Println(tag, "remove old async", dir, "failed:", err)
-		}
-
-		time.Sleep(10 * time.Minute)
-	}
 }
