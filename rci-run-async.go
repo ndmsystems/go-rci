@@ -15,6 +15,7 @@ import (
 )
 
 type cmdState struct {
+	Command  string `json:"command"`
 	Pid      int    `json:"pid"`
 	Finished bool   `json:"finished"`
 	Err      string `json:"error"`
@@ -58,7 +59,8 @@ func (s *svc) runShellScriptAsync(
 		return failed(uid, "create log file", err)
 	}
 
-	cmd := exec.Command("sh", "-c", hook.Data.Execute[0])
+	script := hook.Data.Execute[0]
+	cmd := exec.Command("sh", "-c", script)
 	cmd.Stdout = out
 	cmd.Stderr = out
 	if err := cmd.Start(); err != nil {
@@ -67,11 +69,11 @@ func (s *svc) runShellScriptAsync(
 	}
 
 	pid := cmd.Process.Pid
-	err = scriptStarted(stateFile, pid)
+	err = scriptStarted(script, stateFile, pid)
 
 	go func() {
 		err := cmd.Wait()
-		scriptFinished(stateFile, pid, err)
+		scriptFinished(script, stateFile, pid, err)
 		out.Close()
 	}()
 
@@ -122,16 +124,16 @@ func startSuccess(uid string) ([]byte, error) {
 //
 // state file
 //
-func scriptStarted(fileName string, pid int) error {
-	return writeCommandState(fileName, pid, false, nil)
+func scriptStarted(cmd, fileName string, pid int) error {
+	return writeCommandState(cmd, fileName, pid, false, nil)
 }
 
-func scriptFinished(fileName string, pid int, err error) {
-	writeCommandState(fileName, pid, true, err)
+func scriptFinished(cmd, fileName string, pid int, err error) {
+	writeCommandState(cmd, fileName, pid, true, err)
 }
 
 func writeCommandState(
-	fileName string, pid int, finished bool, err error) error {
+	cmd, fileName string, pid int, finished bool, err error) error {
 
 	s := cmdState{
 		Pid:      pid,
