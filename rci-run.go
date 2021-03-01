@@ -125,8 +125,8 @@ func (s *svc) markScriptRunning(uid, cmd string) (string, error) {
 	now := time.Now()
 	r, ok := s.runningHooks[cmd]
 	if ok {
-		return r.UID, fmt.Errorf("running %s by %s",
-			now.Sub(r.TS).Truncate(time.Millisecond), r.UID)
+		return r.UID, fmt.Errorf("running %s",
+			now.Sub(r.TS).Truncate(time.Millisecond))
 	}
 
 	s.runningHooks[cmd] = ActiveHook{
