@@ -12,6 +12,7 @@ func (s *svc) addBuiltInHooks() {
 	s.addCommandPing()
 	s.addCommandDescribeAPI()
 	s.addCommandHostname()
+	s.addCommandAsyncRunning()
 }
 
 //
