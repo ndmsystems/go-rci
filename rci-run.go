@@ -125,13 +125,13 @@ func (s *svc) markScriptRunning(uid, cmd string) (string, error) {
 	now := time.Now()
 	r, ok := s.runningHooks[cmd]
 	if ok {
-		return r.uid, fmt.Errorf("running %s by %s",
-			now.Sub(r.ts).Truncate(time.Millisecond), r.uid)
+		return r.UID, fmt.Errorf("running %s by %s",
+			now.Sub(r.TS).Truncate(time.Millisecond), r.UID)
 	}
 
-	s.runningHooks[cmd] = activeHook{
-		uid: uid,
-		ts:  now,
+	s.runningHooks[cmd] = ActiveHook{
+		UID: uid,
+		TS:  now,
 	}
 
 	return "", nil
@@ -146,9 +146,9 @@ func (s *svc) remarkScriptRunning(uid, cmd string) {
 	}
 
 	now := time.Now()
-	s.runningHooks[cmd] = activeHook{
-		uid: uid,
-		ts:  now,
+	s.runningHooks[cmd] = ActiveHook{
+		UID: uid,
+		TS:  now,
 	}
 }
 

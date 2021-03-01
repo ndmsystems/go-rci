@@ -24,12 +24,13 @@ type svc struct {
 	hooks      map[string]*rciApi.Hook
 
 	runningHooksLock sync.RWMutex
-	runningHooks     map[string]activeHook
+	runningHooks     map[string]ActiveHook
 }
 
-type activeHook struct {
-	uid string
-	ts  time.Time
+// ActiveHook ...
+type ActiveHook struct {
+	UID string    `json:"uid"`
+	TS  time.Time `json:"started"`
 }
 
 var (
@@ -49,7 +50,7 @@ func New(
 		pathLocal:    filepath.Join(pathLocal, name, "rci"),
 		file2hook:    make(map[string]string),
 		hooks:        make(map[string]*rciApi.Hook),
-		runningHooks: make(map[string]activeHook),
+		runningHooks: make(map[string]ActiveHook),
 	}
 
 	s.addBuiltInHooks()
