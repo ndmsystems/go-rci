@@ -22,6 +22,14 @@ type svc struct {
 	file2hook  map[string]string
 	mu         sync.RWMutex
 	hooks      map[string]*rciApi.Hook
+
+	runningHooksLock sync.RWMutex
+	runningHooks     map[string]activeHook
+}
+
+type activeHook struct {
+	uid string
+	ts  time.Time
 }
 
 var (
@@ -35,12 +43,13 @@ func New(
 	filesCommands bool) rciApi.Service {
 
 	s := &svc{
-		log:        log,
-		tag:        "[RCI " + name + "]:",
-		pathGlobal: pathGlobal,
-		pathLocal:  filepath.Join(pathLocal, name, "rci"),
-		file2hook:  make(map[string]string),
-		hooks:      make(map[string]*rciApi.Hook),
+		log:          log,
+		tag:          "[RCI " + name + "]:",
+		pathGlobal:   pathGlobal,
+		pathLocal:    filepath.Join(pathLocal, name, "rci"),
+		file2hook:    make(map[string]string),
+		hooks:        make(map[string]*rciApi.Hook),
+		runningHooks: make(map[string]activeHook),
 	}
 
 	s.addBuiltInHooks()
@@ -93,7 +102,7 @@ func (s *svc) walkPath(path string) {
 
 			// skip async commands dir
 			if strings.Contains(path, "async") {
-				if err = chkAsync(path, info); err != nil {
+				if err = s.chkAsync(path, info); err != nil {
 					s.log.Error().Println(s.tag, path, err)
 				}
 				return nil

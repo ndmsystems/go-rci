@@ -18,6 +18,8 @@ import (
 )
 
 type cmdState struct {
+	UID      string `json:"uid"`
+	Hook     string `json:"hook"`
 	Command  string `json:"command"`
 	Pid      int    `json:"pid"`
 	Finished bool   `json:"finished"`
@@ -59,21 +61,27 @@ func (s *svc) runShellScriptAsync(
 
 	script := hook.Data.Execute[0] + " >" + logFile
 	cmd := exec.Command("sh", "-c", script)
-	// cmd.Stdout = os.Stdout
-	// cmd.Stderr = os.Stderr
+
+	if ruid, err := s.markScriptRunning(uid, hook.Hook); err != nil {
+		return failed(ruid, "check running", err)
+	}
+
 	if err := cmd.Start(); err != nil {
+		s.unmarkScriptRunning(hook.Hook)
 		return failed(uid, "script start", err)
 	}
 
 	pid := cmd.Process.Pid
-	err := scriptStarted(script, stateFile, pid)
+	err := scriptStarted(uid, hook.Hook, script, stateFile, pid)
 
 	go func() {
 		err := cmd.Wait()
-		scriptFinished(script, stateFile, pid, err)
+		s.unmarkScriptRunning(hook.Hook)
+		scriptFinished(uid, hook.Hook, script, stateFile, pid, err)
 	}()
 
 	if err != nil {
+		s.unmarkScriptRunning(hook.Hook)
 		return failed(uid, "write state file", err)
 	}
 
@@ -120,18 +128,21 @@ func startSuccess(uid string) ([]byte, error) {
 //
 // state file
 //
-func scriptStarted(cmd, fileName string, pid int) error {
-	return writeCommandState(cmd, fileName, pid, false, nil)
+func scriptStarted(uid, hook, cmd, fileName string, pid int) error {
+	return writeCommandState(uid, hook, cmd, fileName, pid, false, nil)
 }
 
-func scriptFinished(cmd, fileName string, pid int, err error) {
-	writeCommandState(cmd, fileName, pid, true, err)
+func scriptFinished(uid, hook, cmd, fileName string, pid int, err error) {
+	writeCommandState(uid, hook, cmd, fileName, pid, true, err)
 }
 
 func writeCommandState(
-	cmd, fileName string, pid int, finished bool, err error) error {
+	uid, hook, cmd, fileName string, pid int, finished bool, err error) error {
 
 	s := cmdState{
+		UID:      uid,
+		Hook:     hook,
+		Command:  cmd,
 		Pid:      pid,
 		Finished: finished,
 		Err:      merror(err),
@@ -168,7 +179,7 @@ func merror(err error) string {
 }
 
 //
-func chkAsync(path string, info os.FileInfo) error {
+func (s *svc) chkAsync(path string, info os.FileInfo) error {
 
 	if strings.HasSuffix(path, ".json") {
 		state, err := readCommandState(path)
@@ -176,6 +187,7 @@ func chkAsync(path string, info os.FileInfo) error {
 			return fmt.Errorf("readCommandState failed: %w", err)
 		}
 		if !state.Finished {
+			s.remarkScriptRunning(state.UID, state.Hook)
 			// check process is running and update finished if process stopped
 			process, err := os.FindProcess(state.Pid)
 			if err != nil {
@@ -187,7 +199,9 @@ func chkAsync(path string, info os.FileInfo) error {
 				if state.Err != "" {
 					err2 = errors.New(state.Err)
 				}
-				scriptFinished(state.Command, path, state.Pid, err2)
+				s.unmarkScriptRunning(state.Hook)
+				scriptFinished(
+					state.UID, state.Hook, state.Command, path, state.Pid, err2)
 			}
 		}
 	}

@@ -59,6 +59,20 @@ func (s *svc) addCommandHostname() {
 }
 
 //
+func (s *svc) addCommandAsyncRunning() {
+	cmd := &rciApi.Hook{
+		Hook: "/rci/async/running",
+		Name: "Running async scripts",
+		Type: rciApi.CommandTypeBuiltIn,
+		Data: rciApi.HookData{
+			BuiltIn: s.asyncRunning,
+		},
+	}
+
+	s.hooks[cmd.Hook] = cmd
+}
+
+//
 func (s *svc) describeAPI(
 	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
 
@@ -78,4 +92,15 @@ func (s *svc) hostname(
 	}
 
 	return []byte("{\"hostname\":\"" + hostname + "\"}"), nil
+}
+
+func (s *svc) asyncRunning(
+	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
+
+	s.runningHooksLock.RLock()
+	s.runningHooksLock.RUnlock()
+
+	json, err := json.Marshal(s.runningHooks)
+
+	return json, err
 }

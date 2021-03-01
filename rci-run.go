@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	rciApi "github.com/tdx/go-rci/api"
 )
@@ -112,4 +113,48 @@ func formatShellScript(
 	buf.WriteString("}")
 
 	return buf.Bytes(), nil
+}
+
+//
+// Running hooks: allow single running script hook
+//
+func (s *svc) markScriptRunning(uid, cmd string) (string, error) {
+	s.runningHooksLock.Lock()
+	defer s.runningHooksLock.Unlock()
+
+	now := time.Now()
+	r, ok := s.runningHooks[cmd]
+	if ok {
+		return r.uid, fmt.Errorf("running %s by %s",
+			now.Sub(r.ts).Truncate(time.Millisecond), r.uid)
+	}
+
+	s.runningHooks[cmd] = activeHook{
+		uid: uid,
+		ts:  now,
+	}
+
+	return "", nil
+}
+
+func (s *svc) remarkScriptRunning(uid, cmd string) {
+	s.runningHooksLock.Lock()
+	defer s.runningHooksLock.Unlock()
+
+	if _, ok := s.runningHooks[cmd]; ok {
+		return
+	}
+
+	now := time.Now()
+	s.runningHooks[cmd] = activeHook{
+		uid: uid,
+		ts:  now,
+	}
+}
+
+func (s *svc) unmarkScriptRunning(cmd string) {
+	s.runningHooksLock.Lock()
+	defer s.runningHooksLock.Unlock()
+
+	delete(s.runningHooks, cmd)
 }
