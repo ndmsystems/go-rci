@@ -206,7 +206,7 @@ func (s *svc) chkAsync(path string, info os.FileInfo) error {
 		}
 	}
 
-	if time.Now().Sub(info.ModTime()) > tenHours {
+	if time.Since(info.ModTime()) > tenHours {
 		if err := os.Remove(path); err != nil {
 			return fmt.Errorf("remove file failed: %w", err)
 		}

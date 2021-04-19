@@ -99,7 +99,7 @@ func (s *svc) asyncRunning(
 	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
 
 	s.runningHooksLock.RLock()
-	s.runningHooksLock.RUnlock()
+	defer s.runningHooksLock.RUnlock()
 
 	json, err := json.Marshal(s.runningHooks)
 

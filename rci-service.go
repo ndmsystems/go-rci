@@ -93,7 +93,7 @@ func (s *svc) walkPath(path string) {
 	err := filepath.Walk(
 		path,
 		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
+			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
 
@@ -127,14 +127,15 @@ func (s *svc) walkPath(path string) {
 				}
 			} else {
 				update = true
-			}
 
-			s.log.Info().Println(s.tag,
-				path, info.Size(), info.ModTime(), update)
+			}
 
 			if !update {
 				return nil
 			}
+
+			s.log.Info().Println(s.tag, path, info.Size(), info.ModTime(),
+				"update:", update)
 
 			data, err := ioutil.ReadFile(path)
 			if err != nil {
