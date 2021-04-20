@@ -93,8 +93,15 @@ func (s *svc) walkPath(path string) {
 	err := filepath.Walk(
 		path,
 		func(path string, info os.FileInfo, err error) error {
-			if err != nil && !os.IsNotExist(err) {
+			if err != nil {
+				if os.IsNotExist(err) {
+					return nil
+				}
 				return err
+			}
+
+			if info == nil {
+				return nil
 			}
 
 			if info.IsDir() {
