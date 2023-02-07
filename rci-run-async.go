@@ -58,9 +58,11 @@ func (s *svc) runShellScriptAsync(
 	uid = shortuuid.New()
 	logFile := filepath.Join(s.pathLocal, "async", uid+".log")
 	stateFile := filepath.Join(s.pathLocal, "async", uid+".json")
+	commandFile := filepath.Join(s.pathLocal, "async", uid+".cmd")
 
-	script := hook.Data.Execute[0] + " >" + logFile
-	cmd := exec.Command("sh", "-c", script)
+	script := strings.Join(hook.Data.Execute[:], "\n")
+	ioutil.WriteFile(commandFile, []byte(script), 0660)
+	cmd := exec.Command("sh", commandFile, " >>"+logFile)
 
 	if ruid, err := s.markScriptRunning(uid, hook.Hook); err != nil {
 		return failed(ruid, "check running", err)
@@ -88,9 +90,7 @@ func (s *svc) runShellScriptAsync(
 	return startSuccess(uid)
 }
 
-//
 // returns
-//
 func (s *svc) result(uid string) ([]byte, error) {
 	stateFile := filepath.Join(s.pathLocal, "async", uid+".json")
 	cmdState, err := readCommandState(stateFile)
@@ -125,9 +125,7 @@ func startSuccess(uid string) ([]byte, error) {
 	})
 }
 
-//
 // state file
-//
 func scriptStarted(uid, hook, cmd, fileName string, pid int) error {
 	return writeCommandState(uid, hook, cmd, fileName, pid, false, nil)
 }
@@ -178,7 +176,6 @@ func merror(err error) string {
 	return err.Error()
 }
 
-//
 func (s *svc) chkAsync(path string, info os.FileInfo) error {
 
 	if strings.HasSuffix(path, ".json") {
