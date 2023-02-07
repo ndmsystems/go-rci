@@ -62,7 +62,7 @@ func (s *svc) runShellScriptAsync(
 
 	script := strings.Join(hook.Data.Execute[:], "\n")
 	ioutil.WriteFile(commandFile, []byte(script), 0660)
-	cmd := exec.Command("sh", commandFile, " >>"+logFile)
+	cmd := exec.Command("sh", "-c", "exec "+commandFile+" >> "+logFile)
 
 	if ruid, err := s.markScriptRunning(uid, hook.Hook); err != nil {
 		return failed(ruid, "check running", err)
