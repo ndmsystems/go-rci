@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	rciApi "github.com/tdx/go-rci/api"
+	rciApi "github.com/ndmsystems/go-rci/api"
 
 	"github.com/lithammer/shortuuid"
 )

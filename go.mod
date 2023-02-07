@@ -1,4 +1,4 @@
-module github.com/tdx/go-rci
+module github.com/ndmsystems/go-rci
 
 go 1.13
 

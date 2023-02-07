@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	rciApi "github.com/tdx/go-rci/api"
+	rciApi "github.com/ndmsystems/go-rci/api"
 )
 
 // Replyer ...
@@ -41,7 +41,6 @@ func (s *svc) Run(
 	}
 }
 
-//
 func (s *svc) runShellScript(
 	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
 
@@ -63,7 +62,6 @@ func (s *svc) runShellScript(
 	return formatShellScript(hook, ret, bytes.TrimSpace(output))
 }
 
-//
 func (s *svc) runBuiltIn(
 	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
 
@@ -74,7 +72,6 @@ func (s *svc) runBuiltIn(
 	return hook.Data.BuiltIn(token, hook, args)
 }
 
-//
 func formatShellScript(
 	command *rciApi.Hook,
 	ret string, // "result" | "error"
@@ -115,9 +112,7 @@ func formatShellScript(
 	return buf.Bytes(), nil
 }
 
-//
 // Running hooks: allow single running script hook
-//
 func (s *svc) markScriptRunning(uid, cmd string) (string, error) {
 	s.runningHooksLock.Lock()
 	defer s.runningHooksLock.Unlock()

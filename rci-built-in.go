@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"os"
 
-	rciApi "github.com/tdx/go-rci/api"
+	rciApi "github.com/ndmsystems/go-rci/api"
 )
 
-//
 func (s *svc) addBuiltInHooks() {
 	s.addCommandPing()
 	s.addCommandDescribeAPI()
@@ -15,7 +14,6 @@ func (s *svc) addBuiltInHooks() {
 	s.addCommandAsyncRunning()
 }
 
-//
 func (s *svc) addCommandPing() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/ping",
@@ -31,7 +29,6 @@ func (s *svc) addCommandPing() {
 	s.hooks[cmd.Hook] = cmd
 }
 
-//
 func (s *svc) addCommandDescribeAPI() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/describe-api",
@@ -45,7 +42,6 @@ func (s *svc) addCommandDescribeAPI() {
 	s.hooks[cmd.Hook] = cmd
 }
 
-//
 func (s *svc) addCommandHostname() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/hostname",
@@ -59,7 +55,6 @@ func (s *svc) addCommandHostname() {
 	s.hooks[cmd.Hook] = cmd
 }
 
-//
 func (s *svc) addCommandAsyncRunning() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/async/running",
@@ -73,7 +68,6 @@ func (s *svc) addCommandAsyncRunning() {
 	s.hooks[cmd.Hook] = cmd
 }
 
-//
 func (s *svc) describeAPI(
 	token []byte, hook *rciApi.Hook, args map[string]string) ([]byte, error) {
 

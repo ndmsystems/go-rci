@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	rciApi "github.com/tdx/go-rci/api"
+	rciApi "github.com/ndmsystems/go-rci/api"
 	logApi "github.com/tdx/go/api/log"
 )
 
@@ -62,7 +62,6 @@ func New(
 	return s
 }
 
-//
 func (s *svc) run() {
 
 	s.log.Info().Println(s.tag, "global path::", s.pathGlobal)
@@ -183,7 +182,6 @@ func (s *svc) walkPath(path string) {
 	}
 }
 
-//
 func (s *svc) chkDeleted() int {
 	deleted := 0
 
@@ -199,7 +197,6 @@ func (s *svc) chkDeleted() int {
 	return deleted
 }
 
-//
 func (s *svc) delete() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -212,7 +209,6 @@ func (s *svc) delete() {
 	}
 }
 
-//
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if err != nil && os.IsNotExist(err) {

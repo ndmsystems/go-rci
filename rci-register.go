@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	rciApi "github.com/tdx/go-rci/api"
+	rciApi "github.com/ndmsystems/go-rci/api"
 )
 
 func (s *svc) Register(hook string, hookCommand *rciApi.Hook) error {
