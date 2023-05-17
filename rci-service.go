@@ -11,7 +11,7 @@ import (
 	"time"
 
 	rciApi "github.com/ndmsystems/go-rci/api"
-	logApi "github.com/tdx/go/api/log"
+	logApi "github.com/ndmsystems/go/api/log"
 )
 
 type svc struct {
