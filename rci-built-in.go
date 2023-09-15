@@ -18,6 +18,7 @@ func (s *svc) addCommandPing() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/ping",
 		Name: "RCI ping",
+		Menu: "Client",
 		Type: rciApi.CommandTypeShellScript,
 		Data: rciApi.HookData{
 			Execute: []string{
@@ -33,6 +34,7 @@ func (s *svc) addCommandDescribeAPI() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/describe-api",
 		Name: "Describe API",
+		Menu: "Client",
 		Type: rciApi.CommandTypeBuiltIn,
 		Data: rciApi.HookData{
 			BuiltIn: s.describeAPI,
@@ -46,6 +48,7 @@ func (s *svc) addCommandHostname() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/hostname",
 		Name: "Hostname",
+		Menu: "Client",
 		Type: rciApi.CommandTypeBuiltIn,
 		Data: rciApi.HookData{
 			BuiltIn: s.hostname,
@@ -59,6 +62,7 @@ func (s *svc) addCommandAsyncRunning() {
 	cmd := &rciApi.Hook{
 		Hook: "/rci/async/running",
 		Name: "Running async scripts",
+		Menu: "Deploy",
 		Type: rciApi.CommandTypeBuiltIn,
 		Data: rciApi.HookData{
 			BuiltIn: s.asyncRunning,

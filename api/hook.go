@@ -28,6 +28,7 @@ type HookData struct {
 type Hook struct {
 	Hook     string
 	Name     string
+	Menu     string
 	Type     CommandType
 	Sync     bool
 	Data     HookData
